@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: traffiq-vision-engine
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: Dockerfile
+    healthCheckPath: /healthz
+    envVars:
+      - key: FLASK_PORT
+        value: 5050
+      - key: DASH_USER
+        value: admin
+      - key: DASH_PASS
+        value: admin123
+      - key: CONFIDENCE_THRESHOLD
+        value: 0.35
+      - key: SPEED_LIMIT_KMH
+        value: 50.0
+      - key: SIGNAL_MODE
+        value: ai_adaptive
+

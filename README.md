@@ -1,5 +1,12 @@
 # 🚦 TraffiQ — AI-Powered Autonomous Traffic Intelligence & Signal Control
 
+[![GitHub Pages Deployment](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-success?style=for-the-badge&logo=github)](https://itskumara1508-web.github.io/TraffiQ/)
+[![CI Pipeline](https://img.shields.io/badge/CI%2FCD-Passing-brightgreen?style=for-the-badge&logo=githubactions)](https://github.com/itskumara1508-web/TraffiQ/actions)
+[![Docker Ready](https://img.shields.io/badge/Docker-Production%20Ready-blue?style=for-the-badge&logo=docker)](https://github.com/itskumara1508-web/TraffiQ/blob/main/Dockerfile)
+
+> 🚀 **Live Interactive Demo on GitHub Pages**: [https://itskumara1508-web.github.io/TraffiQ/](https://itskumara1508-web.github.io/TraffiQ/)  
+> 🚨 **Emergency Priority Corridor Console**: [https://itskumara1508-web.github.io/TraffiQ/emergency.html](https://itskumara1508-web.github.io/TraffiQ/emergency.html)
+
 A production-grade, real-time traffic analytics and actuated signal-control dashboard built with **YOLOv8**, **ByteTrack**, **OpenCV**, and **Flask**. Detects and tracks vehicles across lanes, enforces traffic violations with evidence snapshot/video generation, coordinates traffic signals (Fixed, Actuated, AI-Adaptive, and Green-Wave), forecasts congestion, maps multi-camera intersections on GIS Leaflet, and provides an enterprise REST API with OpenAPI/Swagger documentation.
 
 Featuring a dark theme with neon-purple glow glassmorphism, collapsible control sidebar, and real-time telemetry.
@@ -144,6 +151,34 @@ OpenAPI specification:
 | `GET` | `/api/audit` | View RBAC audit trails |
 
 Authentication is supported via session login or `X-API-Key: trq-prod-live-secret-key-2026` header.
+
+---
+
+## 🚀 Deployment Guide
+
+### 1. GitHub Pages (Live Interactive Demo)
+The interactive demo is automatically deployed to GitHub Pages on every push to `main` via `.github/workflows/pages.yml`.
+- **Live URL**: [https://itskumara1508-web.github.io/TraffiQ/](https://itskumara1508-web.github.io/TraffiQ/)
+- **Emergency Corridor Console**: [https://itskumara1508-web.github.io/TraffiQ/emergency.html](https://itskumara1508-web.github.io/TraffiQ/emergency.html)
+- To enable in your repository: Go to **Settings** → **Pages** → **Build and deployment** → Set Source to **GitHub Actions** (or `gh-pages` branch).
+
+### 2. Docker & Docker Compose
+```bash
+# Build and start containerized TraffiQ service
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# Check health
+curl http://localhost:5050/healthz
+```
+
+### 3. Render / Cloud Deployment
+TraffiQ includes `render.yaml` for 1-click cloud deployments:
+1. Connect this repository to [Render.com](https://render.com).
+2. Choose **New Blueprint Instance** and select your repository.
+3. Render automatically provisions the Docker container and exposes port `5050`.
 
 ---
 

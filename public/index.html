@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TraffiQ — Neural Traffic Platform &amp; Adaptive Signal Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #06040c;
+      --bg-surface: #0e0a18;
+      --bg-surface-elevated: #160f26;
+      --border-subtle: rgba(168, 85, 247, 0.2);
+      --border-glow: rgba(168, 85, 247, 0.45);
+      --accent: #a855f7;
+      --accent-bright: #c084fc;
+      --cyan: #06b6d4;
+      --green: #10b981;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+    }
+
+    body.light-theme {
+      --bg: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-elevated: #f1f5f9;
+      --border-subtle: #e2e8f0;
+      --border-glow: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(168, 85, 247, 0.18), transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(6, 182, 212, 0.08), transparent 70%),
+        radial-gradient(circle at 10% 40%, rgba(16, 185, 129, 0.06), transparent 50%);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .wrap {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .card-3d {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    header {
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-orb {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      box-shadow: 0 0 25px rgba(168, 85, 247, 0.5);
+    }
+
+    .brand-titles h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-titles p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-glass {
+      padding: 8px 14px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-glass:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--accent-bright);
+      transform: translateY(-2px);
+    }
+
+    .live-beacon {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse-dot 1.4s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* KPI GRID */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .kpi-card {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .kpi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kpi-label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .kpi-val {
+      font-size: 2.2rem;
+      font-weight: 900;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: -0.03em;
+    }
+
+    .kpi-val.blue  { color: #c084fc; }
+    .kpi-val.green { color: #34d399; }
+    .kpi-val.red   { color: #f87171; }
+    .kpi-val.amber { color: #fbbf24; }
+
+    .kpi-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .kpi-bar {
+      height: 4px;
+      border-radius: 2px;
+      margin-top: 6px;
+    }
+
+    /* MAIN VIDEO & METRICS ROW */
+    .main-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      .main-row { grid-template-columns: 1fr; }
+    }
+
+    .video-viewport {
+      position: relative;
+      background: #090614;
+      border-radius: 16px;
+      overflow: hidden;
+      min-height: 480px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-subtle);
+    }
+
+    #traffic-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .canvas-hud {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: rgba(14, 10, 24, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 6px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: var(--accent-bright);
+      z-index: 10;
+    }
+
+    .side-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .perf-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .perf-tile {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .perf-tile-val {
+      font-size: 1.4rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .perf-tile-lbl {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* CHARTS ROW */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .charts-row { grid-template-columns: 1fr; }
+    }
+
+    .chart-box {
+      padding: 20px;
+    }
+
+    .chart-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    /* TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+
+    th {
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(16, 12, 28, 0.4);
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    tbody tr:hover td {
+      background: rgba(168, 85, 247, 0.06);
+    }
+
+    .badge-veh {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.74rem;
+    }
+    .badge-amb    { background: rgba(239, 68, 68, 0.2);  color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .badge-fire   { background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.4); }
+    .badge-police { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+    .badge-rescue { background: rgba(234, 179, 8, 0.2);  color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); }
+
+    .state-pill-emergency {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      width: fit-content;
+    }
+    .state-pill-emergency.standby {
+      background: rgba(148, 163, 184, 0.15);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      color: var(--text-muted);
+    }
+    .state-pill-emergency.active {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(16, 185, 129, 0.3));
+      border: 1px solid #10b981;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+      animation: pulse-preempt-dash 1s infinite alternate;
+    }
+    @keyframes pulse-preempt-dash {
+      from { box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+      to { box-shadow: 0 0 25px rgba(16, 185, 129, 0.9); }
+    }
+
+    .em-dispatch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .em-dispatch-btn {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface-elevated);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.25s;
+    }
+    .em-dispatch-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(168, 85, 247, 0.3);
+    }
+    .em-dispatch-btn.amb:hover { border-color: #ef4444; background: rgba(239, 68, 68, 0.2); }
+    .em-dispatch-btn.fire:hover { border-color: #f97316; background: rgba(249, 115, 22, 0.2); }
+    .em-dispatch-btn.police:hover { border-color: #3b82f6; background: rgba(59, 130, 246, 0.2); }
+    .em-dispatch-btn.rescue:hover { border-color: #eab308; background: rgba(234, 179, 8, 0.2); }
+    .em-dispatch-btn.clear:hover { border-color: #94a3b8; background: rgba(148, 163, 184, 0.2); }
+
+    .em-kpi-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .em-kpi-chip {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+    .em-kpi-chip b {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: #fff;
+    }
+
+    /* TOAST */
+    #toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast-card {
+      pointer-events: auto;
+      background: rgba(18, 12, 32, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--red);
+      border-radius: 14px;
+      padding: 14px 18px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(239, 68, 68, 0.4);
+      animation: toast-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      min-width: 300px;
+    }
+
+    @keyframes toast-in {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* SIDEBAR */
+    .ctrl-trigger {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 60px;
+      height: 60px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 30px rgba(168, 85, 247, 0.5);
+      z-index: 100;
+      transition: all 0.3s;
+    }
+
+    .ctrl-sidebar {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 420px;
+      height: 100vh;
+      background: rgba(14, 10, 24, 0.95);
+      backdrop-filter: blur(28px);
+      border-left: 1px solid var(--border-glow);
+      box-shadow: -15px 0 60px rgba(0, 0, 0, 0.8);
+      z-index: 99;
+      transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 36px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      overflow-y: auto;
+    }
+
+    .ctrl-sidebar.open { right: 0; }
+
+    .ctrl-segment-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .ctrl-mode-btn {
+      padding: 10px 8px;
+      border-radius: 12px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border-subtle);
+      background: rgba(26, 18, 44, 0.6);
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .ctrl-mode-btn.active {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(99, 102, 241, 0.3));
+      color: #fff;
+    }
+
+    .ctrl-range {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+    }
+
+    .ctrl-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #c084fc;
+      border: 2px solid #fff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<div class="wrap">
+
+  <!-- HUD HEADER -->
+  <header class="card-3d">
+    <div class="brand-group">
+      <div class="brand-orb">🚦</div>
+      <div class="brand-titles">
+        <h1>TraffiQ <span style="font-size:0.65rem;padding:3px 8px;border-radius:6px;background:rgba(168,85,247,0.25);border:1px solid rgba(168,85,247,0.4);color:var(--accent-bright)">v2.5 Live GitHub Pages</span></h1>
+        <p>Neural Traffic Intelligence &bull; Preemption Engine &bull; GitHub Pages Interactive Preview</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Camera Selector -->
+      <select id="cam-selector" class="btn-glass" style="outline:none">
+        <option value="cam1">🎥 Cam 1: North Junction (Main)</option>
+        <option value="cam2">🎥 Cam 2: ISBT Interchange</option>
+        <option value="cam3">🎥 Cam 3: Ring Road Flyover</option>
+        <option value="cam4">🎥 Cam 4: Airport Expressway</option>
+      </select>
+
+      <div class="btn-glass" style="border-color:var(--cyan);color:var(--cyan)">
+        <span>☀️</span> Clear Day (100%)
+      </div>
+
+      <div class="live-beacon">
+        <span class="live-dot"></span>
+        <span>LIVE AI SIMULATION</span>
+      </div>
+
+      <button class="btn-glass" onclick="toggleTheme()" title="Toggle Dark/Light Theme">🌓 Theme</button>
+      <button class="btn-glass" onclick="toggleSidebar()" style="border-color:var(--accent);color:var(--accent-bright)">⚙️ Settings</button>
+      <a href="emergency.html" class="btn-glass" style="border-color:#ef4444;color:#f87171;text-decoration:none;font-weight:700">🚨 Emergency Console</a>
+      <a href="https://github.com/itskumara1508-web/TraffiQ" target="_blank" class="btn-glass" style="border-color:var(--cyan);color:var(--cyan)">⭐ GitHub Repo</a>
+    </div>
+  </header>
+
+  <!-- 3D KPI GRID -->
+  <div class="kpi-grid">
+    <div class="card-3d kpi-card">
+      <div class="kpi-header"><span class="kpi-label">Active Flow</span><div style="font-size:1.3rem">🚗</div></div>
+      <div class="kpi-val blue" id="k-veh">18</div>
+      <div class="kpi-sub">Total Vehicles Monitored</div>
+      <div class="kpi-bar" style="background:linear-gradient(90deg,#a855f7,#6366f1);width:85%"></div>
+    </div>
+
+    <div class="card-3d kpi-card">
+      <div class="kpi-header"><span class="kpi-label">Lanes &amp; LOS</span><div style="font-size:1.3rem">🛣️</div></div>
+      <div class="kpi-val green" id="k-lanes">2 (LOS B)</div>
+      <div class="kpi-sub">Corridor Grade: High Efficiency</div>
+      <div class="kpi-bar" style="background:linear-gradient(90deg,#10b981,#06b6d4);width:90%"></div>
+    </div>
+
+    <div class="card-3d kpi-card">
+      <div class="kpi-header"><span class="kpi-label">Violations Total</span><div style="font-size:1.3rem">🚨</div></div>
+      <div class="kpi-val red" id="k-violations">6</div>
+      <div class="kpi-sub">Red light / Wrong way / Helmet</div>
+      <div class="kpi-bar" style="background:linear-gradient(90deg,#ef4444,#e11d48);width:45%"></div>
+    </div>
+
+    <div class="card-3d kpi-card">
+      <div class="kpi-header"><span class="kpi-label">Speed Radar</span><div style="font-size:1.3rem">⚡</div></div>
+      <div class="kpi-val amber" id="k-speed">74.2 km/h</div>
+      <div class="kpi-sub">Limit: 50.0 km/h &bull; Speeders: 3</div>
+      <div class="kpi-bar" style="background:linear-gradient(90deg,#f59e0b,#ef4444);width:70%"></div>
+    </div>
+  </div>
+
+  <!-- MAIN VIDEO VIEWPORT & BENCHMARKS ROW -->
+  <div class="main-row">
+    <!-- VIDEO SIMULATOR CANVAS -->
+    <div class="card-3d video-viewport">
+      <div class="canvas-hud">AI Vision Engine: YOLOv8 + ByteTrack [60 FPS Active]</div>
+      <canvas id="traffic-canvas" width="960" height="540"></canvas>
+    </div>
+
+    <!-- BENCHMARKS & FORECASTING -->
+    <div class="side-stack">
+      <div class="card-3d" style="padding:20px">
+        <div style="font-size:0.8rem;font-weight:800;text-transform:uppercase;color:var(--text-muted);letter-spacing:0.08em">AI Signal Efficiency</div>
+        <div class="perf-grid">
+          <div class="perf-tile">
+            <div class="perf-tile-val" style="color:var(--accent-bright)">18.4s</div>
+            <div class="perf-tile-lbl">Avg Wait Time</div>
+          </div>
+          <div class="perf-tile">
+            <div class="perf-tile-val" style="color:var(--green)">36.2</div>
+            <div class="perf-tile-lbl">Throughput (v/m)</div>
+          </div>
+          <div class="perf-tile">
+            <div class="perf-tile-val" style="color:var(--cyan)">-55%</div>
+            <div class="perf-tile-lbl">Delay Reduction</div>
+          </div>
+          <div class="perf-tile">
+            <div class="perf-tile-val" style="color:#f59e0b">Adaptive</div>
+            <div class="perf-tile-lbl">Signal Mode</div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);border-radius:12px;padding:12px">
+          <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Multi-Step Congestion Forecasting</div>
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem">
+            <div><b style="color:var(--cyan)">T+15m:</b> <span>4 veh (LOS B)</span></div>
+            <div><b style="color:var(--accent-bright)">T+30m:</b> <span>7 veh (LOS C)</span></div>
+            <div><b style="color:var(--amber)">T+60m:</b> <span>10 veh (LOS C)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DONUT BREAKDOWN -->
+      <div class="card-3d chart-box" style="flex:1">
+        <div class="chart-title">Vehicle Classification Breakdown</div>
+        <div style="height:170px;position:relative">
+          <canvas id="donutChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REAL-TIME TELEMETRY HISTORY CHART -->
+  <div class="card-3d chart-box">
+    <div class="chart-title">Real-Time Traffic Density &amp; Arterial Flow History</div>
+    <div style="height:190px;position:relative">
+      <canvas id="historyChart"></canvas>
+    </div>
+  </div>
+
+  <!-- LANE TELEMETRY MATRIX -->
+  <div class="card-3d" style="padding:22px">
+    <div style="font-size:0.88rem;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:14px">🛣️ Lane Telemetry Matrix</div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Lane</th><th>Cars</th><th>Buses</th><th>Trucks</th><th>Bikes</th><th>Pedestrians</th>
+            <th>Total</th><th>LOS</th><th>Flow Rate</th><th>Signal State</th><th>Trend</th><th style="color:var(--accent-bright)">Pred 15s</th>
+          </tr>
+        </thead>
+        <tbody id="lane-tbody">
+          <tr>
+            <td><b style="color:#fff">Lane 1 (North)</b></td>
+            <td>6</td><td>1</td><td>2</td><td>3</td><td>0</td>
+            <td><b style="color:var(--accent-bright)">12</b></td>
+            <td><span style="color:#10b981;font-weight:800">LOS B</span></td>
+            <td>18.4 v/m</td>
+            <td id="lane-1-sig"><b style="color:var(--red)">🔴 RED</b></td>
+            <td style="font-weight:800;color:var(--cyan)">↗</td>
+            <td style="color:var(--accent-bright);font-weight:800">14</td>
+          </tr>
+          <tr>
+            <td><b style="color:#fff">Lane 2 (South)</b></td>
+            <td>4</td><td>1</td><td>1</td><td>0</td><td>0</td>
+            <td><b style="color:var(--accent-bright)">6</b></td>
+            <td><span style="color:#10b981;font-weight:800">LOS A</span></td>
+            <td>14.1 v/m</td>
+            <td id="lane-2-sig"><b style="color:var(--green)">🟢 GREEN</b></td>
+            <td style="font-weight:800;color:var(--green)">→</td>
+            <td style="color:var(--accent-bright);font-weight:800">6</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- EMERGENCY VEHICLE TRANSIT & PREEMPTION HISTORY -->
+  <div class="card-3d" id="emergency-preemption-section" style="padding:22px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:1.8rem">🚨</div>
+        <div>
+          <div style="font-size:1.05rem;font-weight:800;display:flex;align-items:center;gap:8px">
+            <span>Emergency Vehicle Transit &amp; Preemption History</span>
+            <span style="font-size:0.7rem;padding:3px 8px;border-radius:6px;background:rgba(239,68,68,0.2);color:#fca5a5;font-weight:700">GIVE-WAY SAFETY CORRIDOR</span>
+          </div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">
+            Automated Red-to-Green preemption overrides &bull; Timestamped audit trail of emergency runs &bull; Priority corridor enforcement
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div id="dash-preemption-pill" class="state-pill-emergency standby">
+          <span style="font-size:0.6rem">●</span> STANDBY / MONITORING
+        </div>
+        <a href="emergency.html" class="btn-glass" style="border-color:#ef4444;color:#f87171;text-decoration:none;font-weight:700">
+          🚨 Full Corridor Console &rarr;
+        </a>
+      </div>
+    </div>
+
+    <!-- MINI KPI CHIPS -->
+    <div class="em-kpi-row">
+      <div class="em-kpi-chip" style="border-left:3px solid var(--red)">
+        <span>🚨 Total Transits:</span> <b id="em-chip-total">12</b>
+      </div>
+      <div class="em-kpi-chip" style="border-left:3px solid #f87171">
+        <span>🚑 Ambulances:</span> <b id="em-chip-amb">5</b>
+      </div>
+      <div class="em-kpi-chip" style="border-left:3px solid #fb923c">
+        <span>🚒 Fire Engines:</span> <b id="em-chip-fire">4</b>
+      </div>
+      <div class="em-kpi-chip" style="border-left:3px solid #60a5fa">
+        <span>🚓 Police Patrols:</span> <b id="em-chip-police">2</b>
+      </div>
+      <div class="em-kpi-chip" style="border-left:3px solid #facc15">
+        <span>🚜 Rescue Trucks:</span> <b id="em-chip-rescue">1</b>
+      </div>
+      <div class="em-kpi-chip" style="border-left:3px solid #10b981">
+        <span>⚡ Signal Override:</span> <b style="color:#34d399">RED ➔ GREEN</b>
+      </div>
+    </div>
+
+    <!-- QUICK SIMULATION DISPATCH CONTROLS -->
+    <div style="background:rgba(18,12,32,0.6);border:1px solid var(--border-subtle);border-radius:14px;padding:12px 16px;margin-bottom:16px">
+      <div style="font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent-bright);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+        <span>⚡ Instant Emergency Preemption Simulator</span>
+        <span style="font-size:0.68rem;color:var(--text-muted);font-weight:500">(Click to force RED light to GREEN to clear corridor)</span>
+      </div>
+      <div class="em-dispatch-grid">
+        <button class="em-dispatch-btn amb" onclick="dispatchEmergency('Ambulance', 1, 68)">
+          <span style="font-size:1.3rem">🚑</span>
+          <div style="text-align:left">
+            <div>Ambulance (Lane 1)</div>
+            <div style="font-size:0.68rem;color:#fca5a5">68 km/h &bull; Red ➔ Green</div>
+          </div>
+        </button>
+        <button class="em-dispatch-btn fire" onclick="dispatchEmergency('Fire Engine', 2, 60)">
+          <span style="font-size:1.3rem">🚒</span>
+          <div style="text-align:left">
+            <div>Fire Engine (Lane 2)</div>
+            <div style="font-size:0.68rem;color:#fdba74">60 km/h &bull; Red ➔ Green</div>
+          </div>
+        </button>
+        <button class="em-dispatch-btn police" onclick="dispatchEmergency('Police Car', 1, 75)">
+          <span style="font-size:1.3rem">🚓</span>
+          <div style="text-align:left">
+            <div>Police Patrol (Lane 1)</div>
+            <div style="font-size:0.68rem;color:#93c5fd">75 km/h &bull; Red ➔ Green</div>
+          </div>
+        </button>
+        <button class="em-dispatch-btn rescue" onclick="dispatchEmergency('Rescue Truck', 2, 52)">
+          <span style="font-size:1.3rem">🚜</span>
+          <div style="text-align:left">
+            <div>Rescue Truck (Lane 2)</div>
+            <div style="font-size:0.68rem;color:#fde047">52 km/h &bull; Red ➔ Green</div>
+          </div>
+        </button>
+        <button class="em-dispatch-btn clear" onclick="clearEmergency()">
+          <span style="font-size:1.3rem">⏹️</span>
+          <div style="text-align:left">
+            <div>Clear Corridor</div>
+            <div style="font-size:0.68rem;color:var(--text-muted)">Resume Normal Cycle</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- PREEMPTION TRANSIT AUDIT HISTORY TABLE -->
+    <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border-subtle)">
+      <table>
+        <thead>
+          <tr>
+            <th>Event ID</th>
+            <th>Timestamp</th>
+            <th>Emergency Vehicle</th>
+            <th>Lane</th>
+            <th>Approach Velocity</th>
+            <th>Signal Transition</th>
+            <th>Preemption Duration</th>
+            <th>Corridor Status</th>
+          </tr>
+        </thead>
+        <tbody id="dash-emergency-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- VIOLATIONS GALLERY -->
+  <div class="card-3d" style="padding:22px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:0.88rem;font-weight:800;letter-spacing:0.04em;text-transform:uppercase">🚨 Recent Violations &bull; Plate Linkage &amp; Evidence Packages</div>
+      <span class="btn-glass" style="font-size:0.75rem">Plate OCR Active</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
+      <div class="card-3d" style="padding:14px;background:var(--bg-surface-elevated)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="background:rgba(239,68,68,0.2);color:#f87171;font-size:0.7rem;font-weight:800;padding:2px 8px;border-radius:6px">RED_LIGHT</span>
+          <span style="font-family:'JetBrains Mono';font-size:0.72rem;color:var(--text-muted)">#V-104</span>
+        </div>
+        <div style="font-weight:800;font-size:0.85rem">Track #42 &bull; DL-8C-AA-1204</div>
+        <div style="font-size:0.75rem;color:var(--text-dim);margin-top:4px">Speed: 64.2 km/h &bull; Lane 1</div>
+        <div style="margin-top:10px;font-size:0.72rem;color:var(--accent-bright);cursor:pointer">📥 Download Evidence Package (.zip)</div>
+      </div>
+      <div class="card-3d" style="padding:14px;background:var(--bg-surface-elevated)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="background:rgba(249,115,22,0.2);color:#fb923c;font-size:0.7rem;font-weight:800;padding:2px 8px;border-radius:6px">WRONG_WAY</span>
+          <span style="font-family:'JetBrains Mono';font-size:0.72rem;color:var(--text-muted)">#V-103</span>
+        </div>
+        <div style="font-weight:800;font-size:0.85rem">Track #18 &bull; DL-1V-BB-9921</div>
+        <div style="font-size:0.75rem;color:var(--text-dim);margin-top:4px">Speed: 42.0 km/h &bull; Lane 2</div>
+        <div style="margin-top:10px;font-size:0.72rem;color:var(--accent-bright);cursor:pointer">📥 Download Evidence Package (.zip)</div>
+      </div>
+      <div class="card-3d" style="padding:14px;background:var(--bg-surface-elevated)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="background:rgba(234,179,8,0.2);color:#facc15;font-size:0.7rem;font-weight:800;padding:2px 8px;border-radius:6px">NO_HELMET</span>
+          <span style="font-family:'JetBrains Mono';font-size:0.72rem;color:var(--text-muted)">#V-102</span>
+        </div>
+        <div style="font-weight:800;font-size:0.85rem">Track #55 &bull; DL-5S-CX-4401</div>
+        <div style="font-size:0.75rem;color:var(--text-dim);margin-top:4px">Speed: 38.5 km/h &bull; Lane 1</div>
+        <div style="margin-top:10px;font-size:0.72rem;color:var(--accent-bright);cursor:pointer">📥 Download Evidence Package (.zip)</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;font-size:0.75rem;color:var(--text-dim);margin-top:10px">
+    TraffiQ Autonomous Traffic Management Platform &bull; Hosted on GitHub Pages &bull; Open-Source AI Edge System
+  </div>
+
+</div>
+
+<!-- 3D CONTROL SIDEBAR -->
+<button class="ctrl-trigger" onclick="toggleSidebar()" title="Control Console">⚙️</button>
+<div class="ctrl-sidebar" id="ctrl-sidebar">
+  <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-subtle);padding-bottom:14px">
+    <div style="font-size:1.15rem;font-weight:800;display:flex;align-items:center;gap:10px"><span>⚙️</span>System Settings</div>
+    <button onclick="toggleSidebar()" style="background:none;border:none;color:var(--text-muted);font-size:1.6rem;cursor:pointer">&times;</button>
+  </div>
+
+  <div>
+    <div style="font-size:0.7rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-bright);margin-bottom:8px">Part 1: Visualization Mode</div>
+    <div class="ctrl-segment-grid">
+      <button class="ctrl-mode-btn active"><span>🛣️</span>Lanes</button>
+      <button class="ctrl-mode-btn"><span>🔥</span>Heatmap</button>
+      <button class="ctrl-mode-btn"><span>🏎️</span>Speed</button>
+      <button class="ctrl-mode-btn"><span>⏱️</span>Timer</button>
+    </div>
+  </div>
+
+  <div>
+    <div style="font-size:0.7rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px">Part 2: YOLO Detection Confidence</div>
+    <input type="range" class="ctrl-range" min="0.1" max="0.9" step="0.05" value="0.35">
+  </div>
+
+  <div>
+    <div style="font-size:0.7rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--amber);margin-bottom:8px">Part 3: Speed Camera Limit</div>
+    <input type="range" class="ctrl-range" min="30" max="120" step="5" value="50">
+  </div>
+
+  <div>
+    <div style="font-size:0.7rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:8px">Part 4: Signal Strategy</div>
+    <select class="btn-glass" style="width:100%;margin-bottom:10px">
+      <option>AI-Adaptive (Dynamic Queue &amp; Trend)</option>
+      <option>Actuated (Gap-Out Logic)</option>
+      <option>Fixed-Time (Cyclical)</option>
+    </select>
+    <a href="emergency.html" class="btn-glass" style="width:100%;justify-content:center;border-color:#ef4444;color:#f87171">
+      <span>🚨</span> Full Priority Console &rarr;
+    </a>
+  </div>
+</div>
+
+<script>
+// ── CANVAS TRAFFIC SIMULATION ──
+const canvas = document.getElementById('traffic-canvas');
+const ctx = canvas.getContext('2d');
+
+let vehicles = [];
+const laneY = [160, 260, 360];
+
+class Vehicle {
+  constructor(lane, isEmergency = false, type = 'car') {
+    this.lane = lane;
+    this.y = laneY[lane];
+    this.x = Math.random() * -300 - 50;
+    this.isEmergency = isEmergency;
+    this.type = type;
+    this.speed = isEmergency ? 4.5 : (lane === 0 ? 3.0 : 2.4);
+    this.id = Math.floor(Math.random() * 900) + 100;
+    this.plate = 'DL-' + Math.floor(Math.random()*9+1) + 'C-' + Math.floor(Math.random()*9000+1000);
+    this.width = isEmergency ? 70 : (type === 'bus' || type === 'truck' ? 85 : 45);
+    this.height = isEmergency ? 32 : (type === 'bus' || type === 'truck' ? 36 : 26);
+    this.color = isEmergency ? '#ef4444' : (type === 'bus' ? '#f59e0b' : type === 'truck' ? '#06b6d4' : '#a855f7');
+  }
+
+  update() {
+    this.x += this.speed;
+    if (this.x > canvas.width + 100) {
+      this.x = -150;
+      this.id = Math.floor(Math.random() * 900) + 100;
+    }
+  }
+
+  draw() {
+    ctx.save();
+    // Bounding Box
+    ctx.strokeStyle = this.isEmergency ? '#ef4444' : '#a855f7';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8);
+
+    // Vehicle Body
+    ctx.fillStyle = this.color;
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+
+    // Wheels
+    ctx.fillStyle = '#000';
+    ctx.fillRect(this.x + 8, this.y - 3, 10, 4);
+    ctx.fillRect(this.x + this.width - 18, this.y - 3, 10, 4);
+    ctx.fillRect(this.x + 8, this.y + this.height - 1, 10, 4);
+    ctx.fillRect(this.x + this.width - 18, this.y + this.height - 1, 10, 4);
+
+    // Label
+    ctx.fillStyle = 'rgba(14, 10, 24, 0.9)';
+    ctx.fillRect(this.x - 4, this.y - 20, this.width + 8, 14);
+    ctx.fillStyle = '#fff';
+    ctx.font = '9px JetBrains Mono';
+    ctx.fillText(`${this.isEmergency ? 'EMERGENCY' : this.type.toUpperCase()} #${this.id}`, this.x - 2, this.y - 9);
+
+    if (this.isEmergency) {
+      ctx.fillStyle = Math.floor(Date.now() / 200) % 2 === 0 ? '#ef4444' : '#3b82f6';
+      ctx.beginPath();
+      ctx.arc(this.x + this.width / 2, this.y + this.height / 2, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+// Populate initial cars
+for (let i = 0; i < 7; i++) {
+  vehicles.push(new Vehicle(i % 3, false, i % 3 === 0 ? 'car' : i % 3 === 1 ? 'truck' : 'bus'));
+}
+
+function animateTraffic() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw Highway Road
+  ctx.fillStyle = '#110d22';
+  ctx.fillRect(0, 100, canvas.width, 320);
+
+  // Lane dividers
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.setLineDash([20, 15]);
+  ctx.lineWidth = 2;
+  [200, 300].forEach(y => {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  // Road borders
+  ctx.strokeStyle = '#a855f7';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, 100); ctx.lineTo(canvas.width, 100);
+  ctx.moveTo(0, 420); ctx.lineTo(canvas.width, 420);
+  ctx.stroke();
+
+  // Stop line
+  ctx.strokeStyle = emergencyState.isPreempted ? '#10b981' : '#ef4444';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(650, 100);
+  ctx.lineTo(650, 420);
+  ctx.stroke();
+
+  // Traffic Light overlay on canvas
+  ctx.fillStyle = '#1e1b2e';
+  ctx.fillRect(660, 40, 36, 80);
+  ctx.fillStyle = emergencyState.isPreempted ? '#374151' : '#ef4444';
+  ctx.beginPath(); ctx.arc(678, 60, 12, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = emergencyState.isPreempted ? '#10b981' : '#374151';
+  ctx.beginPath(); ctx.arc(678, 95, 12, 0, Math.PI * 2); ctx.fill();
+
+  // Update & Draw Vehicles
+  vehicles.forEach(v => {
+    v.update();
+    v.draw();
+  });
+
+  requestAnimationFrame(animateTraffic);
+}
+animateTraffic();
+
+// ── CHARTS INITIALIZATION ──
+const ctxDonut = document.getElementById('donutChart').getContext('2d');
+const donutChart = new Chart(ctxDonut, {
+  type: 'doughnut',
+  data: {
+    labels: ['Cars', 'Buses', 'Trucks', 'Bikes', 'Ambulance'],
+    datasets: [{
+      data: [12, 3, 2, 4, 1],
+      backgroundColor: ['#a855f7', '#f59e0b', '#06b6d4', '#ec4899', '#ef4444'],
+      borderWidth: 0
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 10 } } } }
+  }
+});
+
+const ctxHist = document.getElementById('historyChart').getContext('2d');
+const histChart = new Chart(ctxHist, {
+  type: 'line',
+  data: {
+    labels: ['15:00', '15:05', '15:10', '15:15', '15:20', '15:25', '15:30'],
+    datasets: [
+      { label: 'Lane 1 Flow', data: [14, 18, 16, 22, 19, 21, 24], borderColor: '#a855f7', tension: 0.3, fill: true, backgroundColor: 'rgba(168,85,247,0.1)' },
+      { label: 'Lane 2 Flow', data: [10, 12, 11, 15, 14, 13, 16], borderColor: '#06b6d4', tension: 0.3, fill: true, backgroundColor: 'rgba(6,182,212,0.1)' }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#94a3b8' } } },
+    scales: {
+      x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+      y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }
+    }
+  }
+});
+
+// ── EMERGENCY PREEMPTION STATE & LOGIC ──
+let emergencyState = {
+  isPreempted: false,
+  counts: { total: 12, amb: 5, fire: 4, police: 2, rescue: 1 },
+  history: [
+    { id: 101, ts: '2026-10-31 15:10:40', type: 'Ambulance', lane: 1, speed: 68.4, prior: 'RED', next: 'GREEN (Preempted)', dur: 35, status: 'Corridor Cleared' },
+    { id: 100, ts: '2026-10-31 14:48:12', type: 'Fire Engine', lane: 2, speed: 62.1, prior: 'RED', next: 'GREEN (Preempted)', dur: 35, status: 'Corridor Cleared' },
+    { id: 99,  ts: '2026-10-31 14:15:05', type: 'Police Car', lane: 1, speed: 76.5, prior: 'RED', next: 'GREEN (Preempted)', dur: 30, status: 'Corridor Cleared' },
+    { id: 98,  ts: '2026-10-31 13:50:22', type: 'Rescue Truck', lane: 2, speed: 54.0, prior: 'RED', next: 'GREEN (Preempted)', dur: 35, status: 'Corridor Cleared' }
+  ]
+};
+
+function showToast(title, msg) {
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast-card';
+  t.innerHTML = `<span style="font-size:1.5rem">🚨</span><div><div style="font-weight:800;font-size:0.88rem">${title}</div><div style="font-size:0.75rem;opacity:0.9">${msg}</div></div>`;
+  container.appendChild(t);
+  setTimeout(() => t.remove(), 4500);
+}
+
+function dispatchEmergency(vType, lane, speed) {
+  emergencyState.isPreempted = true;
+  emergencyState.counts.total++;
+  if (vType === 'Ambulance') emergencyState.counts.amb++;
+  else if (vType === 'Fire Engine') emergencyState.counts.fire++;
+  else if (vType === 'Police Car') emergencyState.counts.police++;
+  else if (vType === 'Rescue Truck') emergencyState.counts.rescue++;
+
+  const now = new Date();
+  const tsStr = now.toISOString().replace('T', ' ').slice(0, 19);
+  emergencyState.history.unshift({
+    id: emergencyState.history[0].id + 1,
+    ts: tsStr,
+    type: vType,
+    lane: lane,
+    speed: speed,
+    prior: 'RED',
+    next: 'GREEN (Preempted)',
+    dur: 35,
+    status: 'Corridor Cleared'
+  });
+
+  // Inject emergency vehicle on canvas
+  vehicles.unshift(new Vehicle(lane === 1 ? 0 : 1, true, 'ambulance'));
+
+  showToast(`${vType} Priority Override Active!`, `Lane ${lane} signal automatically overridden: RED ➔ GREEN to give way immediately.`);
+  updateEmergencyUI();
+}
+
+function clearEmergency() {
+  emergencyState.isPreempted = false;
+  showToast('Corridor Cleared', 'Traffic signals resumed standard autonomous adaptive cycle.');
+  updateEmergencyUI();
+}
+
+function updateEmergencyUI() {
+  document.getElementById('em-chip-total').textContent = emergencyState.counts.total;
+  document.getElementById('em-chip-amb').textContent = emergencyState.counts.amb;
+  document.getElementById('em-chip-fire').textContent = emergencyState.counts.fire;
+  document.getElementById('em-chip-police').textContent = emergencyState.counts.police;
+  document.getElementById('em-chip-rescue').textContent = emergencyState.counts.rescue;
+
+  const pill = document.getElementById('dash-preemption-pill');
+  if (emergencyState.isPreempted) {
+    pill.className = 'state-pill-emergency active';
+    pill.innerHTML = `<span>🚨</span> PREEMPTION ACTIVE: RED ➔ GREEN`;
+    document.getElementById('lane-1-sig').innerHTML = '<b style="color:var(--green)">🟢 GREEN (PREEMPTED)</b>';
+    document.getElementById('lane-2-sig').innerHTML = '<b style="color:var(--red)">🔴 RED (HELD)</b>';
+  } else {
+    pill.className = 'state-pill-emergency standby';
+    pill.innerHTML = `<span style="font-size:0.6rem">●</span> STANDBY / MONITORING`;
+    document.getElementById('lane-1-sig').innerHTML = '<b style="color:var(--red)">🔴 RED</b>';
+    document.getElementById('lane-2-sig').innerHTML = '<b style="color:var(--green)">🟢 GREEN</b>';
+  }
+
+  const tbody = document.getElementById('dash-emergency-table-body');
+  tbody.innerHTML = emergencyState.history.map(t => {
+    let badgeCls = 'badge-amb';
+    let icon = '🚑';
+    if (t.type.includes('Fire')) { badgeCls = 'badge-fire'; icon = '🚒'; }
+    else if (t.type.includes('Police')) { badgeCls = 'badge-police'; icon = '🚓'; }
+    else if (t.type.includes('Rescue')) { badgeCls = 'badge-rescue'; icon = '🚜'; }
+
+    return `
+      <tr>
+        <td style="color:var(--text-dim)">#${t.id}</td>
+        <td>${t.ts}</td>
+        <td><span class="badge-veh ${badgeCls}">${icon} ${t.type}</span></td>
+        <td><b>Lane ${t.lane}</b></td>
+        <td><span style="color:#6ee7b7;font-weight:700">${Number(t.speed).toFixed(1)} km/h</span></td>
+        <td><span style="color:#f87171">🔴 ${t.prior}</span> ➔ <span style="color:#34d399;font-weight:700">🟢 ${t.next}</span></td>
+        <td>${t.dur}s</td>
+        <td><span style="color:#34d399;font-weight:700">✔ ${t.status}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+updateEmergencyUI();
+
+function toggleSidebar() {
+  document.getElementById('ctrl-sidebar').classList.toggle('open');
+}
+
+function toggleTheme() {
+  document.body.classList.toggle('light-theme');
+}
+</script>
+
+</body>
+</html>
