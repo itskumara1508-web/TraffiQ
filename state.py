@@ -1,7 +1,7 @@
 import threading
 from collections import deque
 from datetime import datetime
-from config import SPEED_LIMIT_KMPH, INCIDENT_TIMEOUT, CONF_THRESHOLD
+from config import SPEED_LIMIT_KMPH, INCIDENT_TIMEOUT, CONF_THRESHOLD, SIGNAL_MODE
 
 # ──────────────────────────────────────────────
 # SHARED STATE  (Flask ↔ OpenCV thread-safe)
@@ -12,6 +12,7 @@ shared_state = {
     "incidents": [],            # list of active incident dicts
     "mode": "lanes",
     "fps": 0.0,
+    "latency_ms": 18.0,
     "frame_id": 0,
     "speed_data": {},           # {track_id: speed_kmh}
     "speeders": [],             # recent speeding events
@@ -28,10 +29,37 @@ shared_state = {
     "speed_limit":   SPEED_LIMIT_KMPH,   # expose config for dashboard
     "incident_timeout": INCIDENT_TIMEOUT,
     "conf_threshold": CONF_THRESHOLD,
+    
+    # ── PHASE 1-7 EXTENSIONS ──
+    "violations": [],           # list of recent violation objects
+    "vehicle_classes": {        # live class distribution for donut chart
+        "car": 0, "bus": 0, "truck": 0, "motorbike": 0, "auto": 0, "pedestrian": 0
+    },
+    "pedestrians_count": 0,
+    "weather_condition": "Clear Day",
+    "weather_score": 0.98,
+    "signal_mode": SIGNAL_MODE, # "adaptive", "actuated", "fixed"
+    "signal_status": {
+        "active_green_lane": 1,
+        "remaining_s": 25,
+        "total_duration_s": 35,
+        "strategy": "adaptive",
+        "emergency_corridor": False,
+        "green_wave": True
+    },
+    "forecast_15m": {},
+    "forecast_30m": {},
+    "forecast_60m": {},
+    "active_camera": "cam1",
+    "hardware_info": {
+        "device": "CPU / Neural Engine",
+        "acceleration": "Active",
+        "model": "YOLOv8 Nano"
+    }
 }
 state_lock = threading.Lock()
 
-history_buf = deque(maxlen=40)
+history_buf = deque(maxlen=60)
 
 # ──────────────────────────────────────────────
 # SESSION STATS  (for summary on quit)
@@ -44,6 +72,7 @@ _ss_wrong_ids:     set  = set()
 _ss_tailgate:      int  = 0
 _ss_start:         str  = datetime.now().isoformat(timespec="seconds")
 _ss_speeders:      int  = 0
+_ss_violations:    int  = 0
 _ss_ended:         bool = False
 
 # Convenience namespace so callers use session_stats["key"] syntax
@@ -74,6 +103,10 @@ class _SessionStats:
     def speeders_count(self):  return _ss_speeders
     @speeders_count.setter
     def speeders_count(self, v): global _ss_speeders; _ss_speeders = v
+    @property
+    def violations_count(self): return _ss_violations
+    @violations_count.setter
+    def violations_count(self, v): global _ss_violations; _ss_violations = v
     @property
     def session_ended(self):   return _ss_ended
     @session_ended.setter

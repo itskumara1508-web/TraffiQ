@@ -15,6 +15,20 @@
 *.csv
 traffic_log_*.csv
 
+# ── Databases & Storage ──
+*.db
+*.sqlite
+*.sqlite3
+traffiq.db
+
+# ── Evidence & runtime captures ──
+evidence/
+*.jpg
+*.jpeg
+
+# ── Exported Reports ──
+traffiQ_audit_report.html
+
 # ── Output Images ──
 *.png
 
