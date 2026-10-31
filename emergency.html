@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TraffiQ — Emergency Priority Corridor Console (Live Demo)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #06040c;
+      --bg-surface: #0e0a18;
+      --bg-surface-elevated: #160f26;
+      --border-subtle: rgba(168, 85, 247, 0.2);
+      --border-glow: rgba(168, 85, 247, 0.45);
+      --accent: #a855f7;
+      --accent-bright: #c084fc;
+      --cyan: #06b6d4;
+      --green: #10b981;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(239, 68, 68, 0.15), transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(168, 85, 247, 0.08), transparent 70%),
+        radial-gradient(circle at 10% 40%, rgba(6, 182, 212, 0.06), transparent 50%);
+    }
+
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .card-3d {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(16px);
+      position: relative;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-orb {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #ef4444, #f97316);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.5);
+    }
+
+    .brand-titles h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-titles p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .btn-glass {
+      padding: 10px 18px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s;
+    }
+
+    .btn-glass:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--accent-bright);
+      transform: translateY(-2px);
+    }
+
+    .btn-danger {
+      border-color: rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+    }
+
+    .emergency-banner {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(168, 85, 247, 0.15) 100%);
+      border: 2px solid var(--red);
+      border-radius: 20px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 0 35px rgba(239, 68, 68, 0.35);
+      animation: pulse-red 2s infinite alternate;
+    }
+
+    @keyframes pulse-red {
+      from { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+      to { box-shadow: 0 0 40px rgba(239, 68, 68, 0.6); }
+    }
+
+    .banner-icon {
+      font-size: 2.8rem;
+      animation: siren-spin 0.8s infinite linear alternate;
+    }
+
+    @keyframes siren-spin {
+      from { transform: rotate(-15deg) scale(1); }
+      to { transform: rotate(15deg) scale(1.15); }
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .kpi-card {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px 0 0 4px;
+    }
+
+    .kpi-card.red::before { background: var(--red); }
+    .kpi-card.amber::before { background: var(--amber); }
+    .kpi-card.cyan::before { background: var(--cyan); }
+    .kpi-card.green::before { background: var(--green); }
+
+    .kpi-val {
+      font-size: 2rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff;
+    }
+
+    .kpi-label {
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .lanes-visual-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .lane-box {
+      background: rgba(14, 10, 24, 0.8);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .lane-box.emergency-corridor-active {
+      border-color: var(--green);
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.35);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(14, 10, 24, 0.9) 100%);
+    }
+
+    .lane-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .signal-head-container {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .traffic-light-fixture {
+      width: 70px;
+      height: 180px;
+      background: #111827;
+      border: 3px solid #374151;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-around;
+      padding: 10px 0;
+      box-shadow: inset 0 0 10px #000, 0 10px 25px rgba(0, 0, 0, 0.8);
+    }
+
+    .lens {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #1f2937;
+      border: 2px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s;
+    }
+
+    .lens.red.lit {
+      background: radial-gradient(circle at 35% 35%, #fca5a5, #ef4444);
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.9), inset 0 0 10px rgba(255, 255, 255, 0.6);
+    }
+
+    .lens.amber.lit {
+      background: radial-gradient(circle at 35% 35%, #fde68a, #f59e0b);
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.9), inset 0 0 10px rgba(255, 255, 255, 0.6);
+    }
+
+    .lens.green.lit {
+      background: radial-gradient(circle at 35% 35%, #a7f3d0, #10b981);
+      box-shadow: 0 0 35px rgba(16, 185, 129, 1), inset 0 0 12px rgba(255, 255, 255, 0.8);
+      animation: green-beacon 1.2s infinite alternate;
+    }
+
+    @keyframes green-beacon {
+      from { transform: scale(1); filter: brightness(1); }
+      to { transform: scale(1.08); filter: brightness(1.2); }
+    }
+
+    .signal-status-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .state-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      width: fit-content;
+    }
+
+    .state-pill.red {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid var(--red);
+      color: #fca5a5;
+    }
+
+    .state-pill.green {
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid var(--green);
+      color: #6ee7b7;
+    }
+
+    .state-pill.preempted {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(6, 182, 212, 0.3));
+      border: 1px solid #34d399;
+      color: #fff;
+      animation: pulse-preempt 1s infinite alternate;
+    }
+
+    @keyframes pulse-preempt {
+      from { box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+      to { box-shadow: 0 0 25px rgba(16, 185, 129, 0.9); }
+    }
+
+    .dispatch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .dispatch-btn {
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface-elevated);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.25s;
+    }
+
+    .dispatch-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(168, 85, 247, 0.3);
+    }
+
+    .dispatch-btn.amb:hover { border-color: #ef4444; background: rgba(239, 68, 68, 0.2); box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35); }
+    .dispatch-btn.fire:hover { border-color: #f97316; background: rgba(249, 115, 22, 0.2); box-shadow: 0 8px 24px rgba(249, 115, 22, 0.35); }
+    .dispatch-btn.police:hover { border-color: #3b82f6; background: rgba(59, 130, 246, 0.2); box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35); }
+    .dispatch-btn.rescue:hover { border-color: #eab308; background: rgba(234, 179, 8, 0.2); box-shadow: 0 8px 24px rgba(234, 179, 8, 0.35); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+    }
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(16, 12, 28, 0.5);
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    tbody tr:hover td {
+      background: rgba(239, 68, 68, 0.08);
+    }
+
+    .badge-veh {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.78rem;
+    }
+
+    .badge-amb    { background: rgba(239, 68, 68, 0.2);  color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .badge-fire   { background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.4); }
+    .badge-police { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+    .badge-rescue { background: rgba(234, 179, 8, 0.2);  color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); }
+
+    #toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .toast {
+      background: rgba(16, 12, 28, 0.95);
+      border: 1px solid var(--red);
+      border-radius: 14px;
+      padding: 16px 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(239, 68, 68, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: toast-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes toast-in {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header class="card-3d">
+    <div class="brand-group">
+      <div class="brand-orb">🚨</div>
+      <div class="brand-titles">
+        <h1>Emergency Priority Corridor Console</h1>
+        <p>Automated Red-to-Green Signal Preemption &bull; Give-Way Safety Enforcement (GitHub Pages Live)</p>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div id="preemption-pill" class="state-pill red">
+        <span style="font-size:0.6rem">●</span> STANDBY / MONITORING
+      </div>
+      <a href="index.html" class="btn-glass">← Main Traffic Command</a>
+    </div>
+  </header>
+
+  <!-- LIVE EMERGENCY BANNER -->
+  <div class="emergency-banner" id="active-banner" style="display:none">
+    <div style="display:flex;align-items:center;gap:18px">
+      <div class="banner-icon" id="banner-icon">🚑</div>
+      <div>
+        <div style="font-size:1.15rem;font-weight:800;letter-spacing:-0.01em;display:flex;align-items:center;gap:8px">
+          <span id="banner-title">EMERGENCY CORRIDOR ACTIVATED</span>
+          <span style="font-size:0.75rem;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,0.2);font-weight:700">RED ➔ GREEN OVERRIDE</span>
+        </div>
+        <p style="font-size:0.85rem;color:#fecaca;margin-top:4px" id="banner-desc">
+          Emergency vehicle approaching Lane 1. Signal automatically transitioned to GREEN to give way. Conflicting lanes held at RED.
+        </p>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <button class="btn-glass btn-danger" onclick="resetCorridor()">⏹️ Reset Corridor</button>
+    </div>
+  </div>
+
+  <!-- KPI SUMMARY CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card red">
+      <div class="kpi-label">🚨 Total Emergency Transits</div>
+      <div class="kpi-val" id="kpi-total">12</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">🚑 Ambulances Responded</div>
+      <div class="kpi-val" id="kpi-amb">5</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">🚒 Fire Engines &amp; Trucks</div>
+      <div class="kpi-val" id="kpi-fire">4</div>
+    </div>
+    <div class="kpi-card cyan">
+      <div class="kpi-label">🚓 Police Patrols</div>
+      <div class="kpi-val" id="kpi-police">2</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">🚜 Rescue Trucks</div>
+      <div class="kpi-val" id="kpi-rescue">1</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">⚡ Preemption Clearance Window</div>
+      <div class="kpi-val" id="kpi-duration">30s</div>
+    </div>
+  </div>
+
+  <!-- INTERSECTION LANES & TRAFFIC LIGHT VISUALIZER -->
+  <div class="card-3d">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div>
+        <h2 style="font-size:1.15rem;font-weight:800">🚦 Live Corridor Signal &amp; Preemption Monitor</h2>
+        <p style="font-size:0.78rem;color:var(--text-muted);margin-top:3px">Real-time red-to-green phase transition &bull; Automated give-way corridor clearance</p>
+      </div>
+      <span class="btn-glass" style="font-size:0.75rem;border-color:var(--cyan);color:var(--cyan)">Cycle Mode: AI-Adaptive</span>
+    </div>
+
+    <div class="lanes-visual-grid">
+      <!-- LANE 1 -->
+      <div class="lane-box" id="lane-box-1">
+        <div class="lane-header">
+          <div style="font-size:1rem;font-weight:800;display:flex;align-items:center;gap:8px">
+            <span>Lane 1 (Northbound)</span>
+            <span id="lane-1-indicator" style="font-size:0.75rem;color:var(--text-dim)">&bull; Regular Flow</span>
+          </div>
+          <span id="lane-1-pill" class="state-pill red">🔴 RED</span>
+        </div>
+
+        <div class="signal-head-container">
+          <div class="traffic-light-fixture">
+            <div class="lens red lit" id="l1-red"></div>
+            <div class="lens amber" id="l1-amber"></div>
+            <div class="lens green" id="l1-green"></div>
+          </div>
+          <div class="signal-status-details">
+            <div style="font-size:0.76rem;color:var(--text-muted);text-transform:uppercase;font-weight:700">Preemption State</div>
+            <div id="l1-preemption-msg" style="font-size:0.9rem;font-weight:700;color:var(--text)">Signal running normal cycle</div>
+            <div style="margin-top:8px">
+              <span style="font-size:0.72rem;color:var(--text-muted)">Remaining Phase Window:</span>
+              <span id="l1-timer" style="font-size:1.2rem;font-weight:800;font-family:'JetBrains Mono';color:var(--accent-bright);margin-left:6px">25s</span>
+            </div>
+            <div id="l1-action-note" style="font-size:0.75rem;color:var(--amber);margin-top:4px;display:none">
+              ⚠️ Give way to incoming emergency vehicle!
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LANE 2 -->
+      <div class="lane-box" id="lane-box-2">
+        <div class="lane-header">
+          <div style="font-size:1rem;font-weight:800;display:flex;align-items:center;gap:8px">
+            <span>Lane 2 (Southbound)</span>
+            <span id="lane-2-indicator" style="font-size:0.75rem;color:var(--text-dim)">&bull; Regular Flow</span>
+          </div>
+          <span id="lane-2-pill" class="state-pill green">🟢 GREEN</span>
+        </div>
+
+        <div class="signal-head-container">
+          <div class="traffic-light-fixture">
+            <div class="lens red" id="l2-red"></div>
+            <div class="lens amber" id="l2-amber"></div>
+            <div class="lens green lit" id="l2-green"></div>
+          </div>
+          <div class="signal-status-details">
+            <div style="font-size:0.76rem;color:var(--text-muted);text-transform:uppercase;font-weight:700">Preemption State</div>
+            <div id="l2-preemption-msg" style="font-size:0.9rem;font-weight:700;color:var(--text)">Signal running normal cycle</div>
+            <div style="margin-top:8px">
+              <span style="font-size:0.72rem;color:var(--text-muted)">Remaining Phase Window:</span>
+              <span id="l2-timer" style="font-size:1.2rem;font-weight:800;font-family:'JetBrains Mono';color:var(--green);margin-left:6px">25s</span>
+            </div>
+            <div id="l2-action-note" style="font-size:0.75rem;color:var(--amber);margin-top:4px;display:none">
+              ⚠️ Give way to incoming emergency vehicle!
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMERGENCY SIMULATION & DISPATCH CONSOLE -->
+  <div class="card-3d">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div>
+        <h2 style="font-size:1.15rem;font-weight:800;display:flex;align-items:center;gap:8px">
+          <span>⚡ Emergency Preemption Dispatcher</span>
+          <span style="font-size:0.72rem;padding:2px 8px;border-radius:6px;background:rgba(239,68,68,0.2);color:#fca5a5;font-weight:700">Live Simulation</span>
+        </h2>
+        <p style="font-size:0.78rem;color:var(--text-muted);margin-top:3px">
+          Click below to dispatch an emergency vehicle &mdash; watch the red light instantly switch to <b>GREEN</b> to give way!
+        </p>
+      </div>
+      <button class="btn-glass" onclick="resetCorridor()">⏹️ Reset All Overrides</button>
+    </div>
+
+    <!-- QUICK DISPATCH BUTTONS -->
+    <div class="dispatch-grid">
+      <button class="dispatch-btn amb" onclick="triggerPreemption('Ambulance', 1, 68)">
+        <span style="font-size:1.8rem">🚑</span>
+        <div style="text-align:left">
+          <div style="font-weight:800">Dispatch Ambulance</div>
+          <div style="font-size:0.72rem;color:#fca5a5">Lane 1 &bull; 68 km/h &bull; Red ➔ Green</div>
+        </div>
+      </button>
+
+      <button class="dispatch-btn fire" onclick="triggerPreemption('Fire Engine', 2, 60)">
+        <span style="font-size:1.8rem">🚒</span>
+        <div style="text-align:left">
+          <div style="font-weight:800">Dispatch Fire Engine</div>
+          <div style="font-size:0.72rem;color:#fdba74">Lane 2 &bull; 60 km/h &bull; Red ➔ Green</div>
+        </div>
+      </button>
+
+      <button class="dispatch-btn police" onclick="triggerPreemption('Police Car', 1, 75)">
+        <span style="font-size:1.8rem">🚓</span>
+        <div style="text-align:left">
+          <div style="font-weight:800">Dispatch Police Car</div>
+          <div style="font-size:0.72rem;color:#93c5fd">Lane 1 &bull; 75 km/h &bull; Red ➔ Green</div>
+        </div>
+      </button>
+
+      <button class="dispatch-btn rescue" onclick="triggerPreemption('Rescue Truck', 2, 52)">
+        <span style="font-size:1.8rem">🚜</span>
+        <div style="text-align:left">
+          <div style="font-weight:800">Dispatch Rescue Truck</div>
+          <div style="font-size:0.72rem;color:#fde047">Lane 2 &bull; 52 km/h &bull; Red ➔ Green</div>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- EMERGENCY EVENT AUDIT LOG TABLE -->
+  <div class="card-3d">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div>
+        <h2 style="font-size:1.15rem;font-weight:800">📋 Emergency Vehicle Transit &amp; Preemption History</h2>
+        <p style="font-size:0.78rem;color:var(--text-muted);margin-top:3px">Certified log of all emergency vehicles that passed through the signal corridor</p>
+      </div>
+      <button class="btn-glass" onclick="renderHistoryTable()">🔄 Refresh</button>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Event ID</th>
+            <th>Timestamp</th>
+            <th>Vehicle Classification</th>
+            <th>Lane</th>
+            <th>Approach Velocity</th>
+            <th>Signal Transition</th>
+            <th>Preemption Duration</th>
+            <th>Corridor Status</th>
+          </tr>
+        </thead>
+        <tbody id="emergency-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let state = {
+  isPreempted: false,
+  activeLane: null,
+  activeVeh: null,
+  l1Green: false,
+  l2Green: true,
+  timer1: 25,
+  timer2: 25,
+  history: [
+    { id: 101, ts: '2026-10-31 15:10:40', type: 'Ambulance', lane: 1, speed: 68.4, prior: 'RED', next: 'GREEN (Preempted)', dur: 35, status: 'Corridor Cleared' },
+    { id: 100, ts: '2026-10-31 14:48:12', type: 'Fire Engine', lane: 2, speed: 62.1, prior: 'RED', next: 'GREEN (Preempted)', dur: 35, status: 'Corridor Cleared' },
+    { id: 99,  ts: '2026-10-31 14:15:05', type: 'Police Car', lane: 1, speed: 76.5, prior: 'RED', next: 'GREEN (Preempted)', dur: 30, status: 'Corridor Cleared' },
+    { id: 98,  ts: '2026-10-31 13:50:22', type: 'Rescue Truck', lane: 2, speed: 54.0, prior: 'RED', next: 'GREEN (Preempted)', dur: 35, status: 'Corridor Cleared' }
+  ],
+  counts: { total: 12, amb: 5, fire: 4, police: 2, rescue: 1 }
+};
+
+function showToast(title, msg) {
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `
+    <span style="font-size:1.5rem">🚨</span>
+    <div>
+      <div style="font-weight:800;font-size:0.88rem;color:#fff">${title}</div>
+      <div style="font-size:0.78rem;color:#fca5a5;margin-top:2px">${msg}</div>
+    </div>
+  `;
+  container.appendChild(t);
+  setTimeout(() => t.remove(), 4500);
+}
+
+function triggerPreemption(vType, lane, speed) {
+  state.isPreempted = true;
+  state.activeLane = lane;
+  state.activeVeh = vType;
+
+  if (lane === 1) {
+    state.l1Green = true;
+    state.l2Green = false;
+    state.timer1 = 35;
+  } else {
+    state.l1Green = false;
+    state.l2Green = true;
+    state.timer2 = 35;
+  }
+
+  state.counts.total++;
+  if (vType === 'Ambulance') state.counts.amb++;
+  else if (vType === 'Fire Engine') state.counts.fire++;
+  else if (vType === 'Police Car') state.counts.police++;
+  else if (vType === 'Rescue Truck') state.counts.rescue++;
+
+  const now = new Date();
+  const tsStr = now.toISOString().replace('T', ' ').slice(0, 19);
+  state.history.unshift({
+    id: state.history.length ? state.history[0].id + 1 : 1,
+    ts: tsStr,
+    type: vType,
+    lane: lane,
+    speed: speed,
+    prior: 'RED',
+    next: 'GREEN (Preempted)',
+    dur: 35,
+    status: 'Corridor Cleared'
+  });
+
+  showToast(`${vType} Priority Triggered!`, `Signal in Lane ${lane} overridden: RED ➔ GREEN to give way immediately.`);
+  updateUI();
+}
+
+function resetCorridor() {
+  state.isPreempted = false;
+  state.activeLane = null;
+  state.activeVeh = null;
+  state.l1Green = false;
+  state.l2Green = true;
+  showToast('Corridor Reset', 'Traffic signals resumed standard autonomous adaptive cycle.');
+  updateUI();
+}
+
+function updateUI() {
+  // Update KPI counters
+  document.getElementById('kpi-total').textContent = state.counts.total;
+  document.getElementById('kpi-amb').textContent = state.counts.amb;
+  document.getElementById('kpi-fire').textContent = state.counts.fire;
+  document.getElementById('kpi-police').textContent = state.counts.police;
+  document.getElementById('kpi-rescue').textContent = state.counts.rescue;
+
+  // Banner & Top Pill
+  const pill = document.getElementById('preemption-pill');
+  const banner = document.getElementById('active-banner');
+
+  if (state.isPreempted) {
+    pill.className = 'state-pill green';
+    pill.innerHTML = `<span>🚨</span> PREEMPTION ACTIVE: LANE ${state.activeLane}`;
+    banner.style.display = 'flex';
+    const iconMap = { 'Ambulance': '🚑', 'Fire Engine': '🚒', 'Police Car': '🚓', 'Rescue Truck': '🚜' };
+    document.getElementById('banner-icon').textContent = iconMap[state.activeVeh] || '🚨';
+    document.getElementById('banner-title').textContent = `${state.activeVeh.toUpperCase()} CORRIDOR ACTIVE`;
+    document.getElementById('banner-desc').textContent = `${state.activeVeh} approaching on Lane ${state.activeLane}. Signal overridden: RED ➔ GREEN to give immediate way.`;
+  } else {
+    pill.className = 'state-pill red';
+    pill.innerHTML = `<span style="font-size:0.6rem">●</span> STANDBY / MONITORING`;
+    banner.style.display = 'none';
+  }
+
+  // Lane 1
+  document.getElementById('l1-red').className = `lens red ${!state.l1Green ? 'lit' : ''}`;
+  document.getElementById('l1-green').className = `lens green ${state.l1Green ? 'lit' : ''}`;
+  document.getElementById('l1-pill').className = `state-pill ${state.l1Green ? (state.isPreempted && state.activeLane === 1 ? 'preempted' : 'green') : 'red'}`;
+  document.getElementById('l1-pill').textContent = state.l1Green ? (state.isPreempted && state.activeLane === 1 ? '🟢 PREEMPTED GREEN' : '🟢 GREEN') : '🔴 RED LIGHT';
+  document.getElementById('lane-box-1').className = `lane-box ${state.isPreempted && state.activeLane === 1 ? 'emergency-corridor-active' : ''}`;
+  document.getElementById('l1-preemption-msg').textContent = (state.isPreempted && state.activeLane === 1) ? `🚨 ${state.activeVeh} Preemption Active (Give Way!)` : 'Regular Traffic Cycle';
+  document.getElementById('l1-action-note').style.display = (state.isPreempted && state.activeLane === 1) ? 'block' : 'none';
+
+  // Lane 2
+  document.getElementById('l2-red').className = `lens red ${!state.l2Green ? 'lit' : ''}`;
+  document.getElementById('l2-green').className = `lens green ${state.l2Green ? 'lit' : ''}`;
+  document.getElementById('l2-pill').className = `state-pill ${state.l2Green ? (state.isPreempted && state.activeLane === 2 ? 'preempted' : 'green') : 'red'}`;
+  document.getElementById('l2-pill').textContent = state.l2Green ? (state.isPreempted && state.activeLane === 2 ? '🟢 PREEMPTED GREEN' : '🟢 GREEN') : '🔴 RED LIGHT';
+  document.getElementById('lane-box-2').className = `lane-box ${state.isPreempted && state.activeLane === 2 ? 'emergency-corridor-active' : ''}`;
+  document.getElementById('l2-preemption-msg').textContent = (state.isPreempted && state.activeLane === 2) ? `🚨 ${state.activeVeh} Preemption Active (Give Way!)` : 'Regular Traffic Cycle';
+  document.getElementById('l2-action-note').style.display = (state.isPreempted && state.activeLane === 2) ? 'block' : 'none';
+
+  renderHistoryTable();
+}
+
+function renderHistoryTable() {
+  const tbody = document.getElementById('emergency-table-body');
+  tbody.innerHTML = state.history.map(t => {
+    let badgeCls = 'badge-amb';
+    let icon = '🚑';
+    if (t.type.includes('Fire')) { badgeCls = 'badge-fire'; icon = '🚒'; }
+    else if (t.type.includes('Police')) { badgeCls = 'badge-police'; icon = '🚓'; }
+    else if (t.type.includes('Rescue')) { badgeCls = 'badge-rescue'; icon = '🚜'; }
+
+    return `
+      <tr>
+        <td style="color:var(--text-dim)">#${t.id}</td>
+        <td>${t.ts}</td>
+        <td><span class="badge-veh ${badgeCls}">${icon} ${t.type}</span></td>
+        <td><b>Lane ${t.lane}</b></td>
+        <td><span style="color:#6ee7b7;font-weight:700">${Number(t.speed).toFixed(1)} km/h</span></td>
+        <td><span style="color:#f87171">🔴 ${t.prior}</span> ➔ <span style="color:#34d399;font-weight:700">🟢 ${t.next}</span></td>
+        <td>${t.dur}s</td>
+        <td><span style="color:#34d399;font-weight:700">✔ ${t.status}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+updateUI();
+
+// Realistic signal cycling timer
+setInterval(() => {
+  if (!state.isPreempted) {
+    state.timer1--;
+    state.timer2--;
+    if (state.timer1 <= 0 || state.timer2 <= 0) {
+      state.l1Green = !state.l1Green;
+      state.l2Green = !state.l2Green;
+      state.timer1 = 25;
+      state.timer2 = 25;
+    }
+    document.getElementById('l1-timer').textContent = `${Math.max(1, state.timer1)}s`;
+    document.getElementById('l2-timer').textContent = `${Math.max(1, state.timer2)}s`;
+    updateUI();
+  }
+}, 1000);
+</script>
+
+</body>
+</html>
